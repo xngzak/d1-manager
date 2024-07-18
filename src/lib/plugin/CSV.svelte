@@ -109,7 +109,7 @@
 			}
 
 			const queries = bodies.map(
-				(body) => `INSERT INTO ${table} (${keys?.join(", ")}) VALUES ${body}`,
+				(body) => `INSERT OR REPLACE INTO ${table} (${keys?.join(", ")}) VALUES ${body}`,
 			);
 
 			console.log(queries);

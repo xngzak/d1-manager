@@ -113,7 +113,7 @@ export async function sqlite2sql(sqlite3: ArrayBuffer): Promise<string> {
 			const vals = rows.values;
 			console.log({ name, cols, vals });
 			for (const val of vals) {
-				sql += `INSERT INTO \`${name}\` (${cols.map((c) => `\`${c}\``).join(", ")}) VALUES (${val
+				sql += `INSERT OR REPLACE INTO \`${name}\` (${cols.map((c) => `\`${c}\``).join(", ")}) VALUES (${val
 					.map((v) =>
 						typeof v === "string"
 							? `'${v.replace(/'/g, "''").replace(/\n/g, "\\n")}'`
