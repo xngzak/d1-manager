@@ -91,7 +91,7 @@
 		running = true;
 
 		try {
-			const bodies = split(casted, 90_000);
+			const bodies = split(casted, 50_000);
 
 			function split(arr: any[][], size: number): string[] {
 				const bodies: string[] = [""];
