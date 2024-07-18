@@ -117,7 +117,7 @@
 			for (const [index, query] of queries.entries()) {
 				// クエリの実行前に待機時間を入れる（最初のクエリ以外）
 				if (index > 0) {
-					await new Promise((resolve) => setTimeout(resolve, 100)); // 100ミリ秒待機
+					await new Promise((resolve) => setTimeout(resolve, 2000)); // 2000ミリ秒待機
 				}
 				const res = await fetch(`/api/db/${database}/all`, {
 					method: "POST",
