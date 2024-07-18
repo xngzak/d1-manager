@@ -120,8 +120,8 @@
 						error = json?.error?.cause || json?.error?.message;
 						break;
 					} else {
-						totalDuration += json.meta.duration;
-						totalChanges += json.meta.changes;
+						totalDuration += json.meta?.duration || 0;
+						totalChanges += json.meta?.changes || 0;
 					}
 				} else {
 					throw new Error($t("plugin.csv.no-result"));
