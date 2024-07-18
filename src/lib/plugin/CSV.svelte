@@ -114,13 +114,18 @@
 
 			console.log(queries);
 			let r: typeof result = undefined;
-			for (const query of queries) {
+			for (const [index, query] of queries.entries()) {
+				// クエリの実行前に待機時間を入れる（最初のクエリ以外）
+				if (index > 0) {
+					await new Promise((resolve) => setTimeout(resolve, 100)); // 100ミリ秒待機
+				}
 				const res = await fetch(`/api/db/${database}/all`, {
 					method: "POST",
 					body: JSON.stringify({ query }),
 				});
 
 				const json = await res.json<any>();
+
 				if (json) {
 					if ("error" in json) {
 						error = json?.error?.cause || json?.error?.message;
@@ -141,6 +146,8 @@
 				} else {
 					throw new Error($t("plugin.csv.no-result"));
 				}
+				// 進捗状況の更新
+				console.log(`Progress: ${(((index + 1) / queries.length) * 100).toFixed(2)}%`);
 			}
 		} finally {
 			running = false;
