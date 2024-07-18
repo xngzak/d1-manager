@@ -91,34 +91,23 @@
 		running = true;
 
 		try {
-			const bodies = split(casted, 50_000);
+			const batchSize = 100; // 一度に送信するレコード数
+			let totalDuration = 0;
+			let totalChanges = 0;
+			let processedRecords = 0;
 
-			function split(arr: any[][], size: number): string[] {
-				const bodies: string[] = [""];
-				for (let i = 0; i < arr.length; i++) {
-					if (bodies[bodies.length - 1].length >= size) {
-						bodies.push("");
-					}
-					if (bodies[bodies.length - 1].length > 0) {
-						bodies[bodies.length - 1] += ", ";
-					}
-					bodies[bodies.length - 1] +=
-						`(${arr[i].map((x) => JSON.stringify(x)).join(", ")})`;
+			while (processedRecords < casted.length) {
+				const batch = casted.slice(processedRecords, processedRecords + batchSize);
+				const body = batch
+					.map((row) => `(${row.map((x) => JSON.stringify(x)).join(", ")})`)
+					.join(", ");
+				const query = `INSERT OR REPLACE INTO ${table} (${keys?.join(", ")}) VALUES ${body}`;
+
+				// 最初のバッチ以外は待機時間を入れる
+				if (processedRecords > 0) {
+					await new Promise((resolve) => setTimeout(resolve, 100)); // 100ミリ秒待機
 				}
-				return bodies;
-			}
 
-			const queries = bodies.map(
-				(body) => `INSERT OR REPLACE INTO ${table} (${keys?.join(", ")}) VALUES ${body}`,
-			);
-
-			console.log(queries);
-			let r: typeof result = undefined;
-			for (const [index, query] of queries.entries()) {
-				// クエリの実行前に待機時間を入れる（最初のクエリ以外）
-				if (index > 0) {
-					await new Promise((resolve) => setTimeout(resolve, 2000)); // 2000ミリ秒待機
-				}
 				const res = await fetch(`/api/db/${database}/all`, {
 					method: "POST",
 					body: JSON.stringify({ query }),
@@ -129,26 +118,40 @@
 				if (json) {
 					if ("error" in json) {
 						error = json?.error?.cause || json?.error?.message;
-						r = undefined;
+						break;
 					} else {
-						if (r) {
-							r.meta.duration += json.meta.duration;
-							r.meta.changes += json.meta.changes;
-						} else {
-							r = json;
-						}
-						error = undefined;
-						files = undefined;
-						keys = undefined;
-						casted = undefined;
+						totalDuration += json.meta.duration;
+						totalChanges += json.meta.changes;
 					}
-					result = r;
 				} else {
 					throw new Error($t("plugin.csv.no-result"));
 				}
+
+				processedRecords += batch.length;
+
 				// 進捗状況の更新
-				console.log(`Progress: ${(((index + 1) / queries.length) * 100).toFixed(2)}%`);
+				console.log(`Progress: ${((processedRecords / casted.length) * 100).toFixed(2)}%`);
 			}
+
+			if (!error) {
+				result = {
+					results: [],
+					success: true,
+					meta: {
+						duration: totalDuration,
+						last_row_id: 0,
+						changes: totalChanges,
+						served_by: "",
+						internal_stats: null,
+					},
+				};
+				files = undefined;
+				keys = undefined;
+				casted = undefined;
+			}
+		} catch (err) {
+			console.error("Import error:", err);
+			error = err instanceof Error ? err.message : "Unknown error occurred";
 		} finally {
 			running = false;
 		}
