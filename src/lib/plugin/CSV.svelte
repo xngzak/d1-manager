@@ -102,8 +102,7 @@
 				//	.map((row) => `(${row.map((x) => JSON.stringify(x)).join(", ")})`)
 				//	.join(", ");
 				//const query = `INSERT OR REPLACE INTO ${table} (${keys?.join(", ")}) VALUES ${body}`;
-				const query = `INSERT OR REPLACE INTO ${table} (${keys?.join(", ")}) VALUES (${keys?.map(() => "?").join(", ")})`;
-				console.log(query);
+				const query = `INSERT OR REPLACE INTO ${table} (${keys?.join(", ")}) VALUES (${keys?.map((k) => `quote(?)`).join(", ")})`;
 
 				// 最初のバッチ以外は待機時間を入れる
 				if (processedRecords > 0) {
@@ -114,6 +113,10 @@
 					method: "POST",
 					body: JSON.stringify({ query }),
 				});
+
+				if (!res.ok) {
+					console.log(query);
+				}
 
 				const json = await res.json();
 
