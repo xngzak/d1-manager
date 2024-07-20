@@ -91,7 +91,7 @@
 		running = true;
 
 		try {
-			const batchSize = 100; // 一度に送信するレコード数
+			const batchSize = 30; // 一度に送信するレコード数
 			let totalDuration = 0;
 			let totalChanges = 0;
 			let processedRecords = 0;
@@ -102,10 +102,11 @@
 					.map((row) => `(${row.map((x) => JSON.stringify(x)).join(", ")})`)
 					.join(", ");
 				const query = `INSERT OR REPLACE INTO ${table} (${keys?.join(", ")}) VALUES ${body}`;
+				console.log(query);
 
 				// 最初のバッチ以外は待機時間を入れる
 				if (processedRecords > 0) {
-					await new Promise((resolve) => setTimeout(resolve, 100)); // 100ミリ秒待機
+					await new Promise((resolve) => setTimeout(resolve, 200)); // 200ミリ秒待機
 				}
 
 				const res = await fetch(`/api/db/${database}/all`, {
@@ -113,7 +114,7 @@
 					body: JSON.stringify({ query }),
 				});
 
-				const json = await res.json<any>();
+				const json = await res.json();
 
 				if (json) {
 					if ("error" in json) {
