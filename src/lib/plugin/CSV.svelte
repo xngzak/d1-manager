@@ -91,17 +91,18 @@
 		running = true;
 
 		try {
-			const batchSize = 30; // 一度に送信するレコード数
+			const batchSize = 50; // 一度に送信するレコード数
 			let totalDuration = 0;
 			let totalChanges = 0;
 			let processedRecords = 0;
 
 			while (processedRecords < casted.length) {
 				const batch = casted.slice(processedRecords, processedRecords + batchSize);
-				const body = batch
-					.map((row) => `(${row.map((x) => JSON.stringify(x)).join(", ")})`)
-					.join(", ");
-				const query = `INSERT OR REPLACE INTO ${table} (${keys?.join(", ")}) VALUES ${body}`;
+				//const body = batch
+				//	.map((row) => `(${row.map((x) => JSON.stringify(x)).join(", ")})`)
+				//	.join(", ");
+				//const query = `INSERT OR REPLACE INTO ${table} (${keys?.join(", ")}) VALUES ${body}`;
+				const query = `INSERT OR REPLACE INTO ${table} (${keys?.join(", ")}) VALUES (${keys?.map(() => "?").join(", ")})`;
 				console.log(query);
 
 				// 最初のバッチ以外は待機時間を入れる
