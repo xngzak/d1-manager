@@ -91,7 +91,7 @@
 		running = true;
 
 		try {
-			const batchSize = 50; // 一度に送信するレコード数
+			const batchSize = 20; // 一度に送信するレコード数
 			let totalDuration = 0;
 			let totalChanges = 0;
 			let processedRecords = 0;
@@ -101,9 +101,6 @@
 				function escapeSQLite(value: { toString: () => string } | null | undefined) {
 					if (value === null || value === undefined) {
 						return "NULL";
-					}
-					if (typeof value === "number" || typeof value === "boolean") {
-						return value.toString();
 					}
 					// 文字列の場合、シングルクォートをエスケープし、全体をシングルクォートで囲む
 					return `'${value.toString().replace(/'/g, "''")}'`;
@@ -115,7 +112,7 @@
 
 				// 最初のバッチ以外は待機時間を入れる
 				if (processedRecords > 0) {
-					await new Promise((resolve) => setTimeout(resolve, 200)); // 200ミリ秒待機
+					await new Promise((resolve) => setTimeout(resolve, 100)); // 100ミリ秒待機
 				}
 
 				const res = await fetch(`/api/db/${database}/all`, {
