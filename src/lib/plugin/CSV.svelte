@@ -98,11 +98,20 @@
 
 			while (processedRecords < casted.length) {
 				const batch = casted.slice(processedRecords, processedRecords + batchSize);
-				//const body = batch
-				//	.map((row) => `(${row.map((x) => JSON.stringify(x)).join(", ")})`)
-				//	.join(", ");
-				//const query = `INSERT OR REPLACE INTO ${table} (${keys?.join(", ")}) VALUES ${body}`;
-				const query = `INSERT OR REPLACE INTO ${table} (${keys?.join(", ")}) VALUES (${keys?.map((k) => `quote(?)`).join(", ")})`;
+				function escapeSQLite(value: { toString: () => string } | null | undefined) {
+					if (value === null || value === undefined) {
+						return "NULL";
+					}
+					if (typeof value === "number" || typeof value === "boolean") {
+						return value.toString();
+					}
+					// 文字列の場合、シングルクォートをエスケープし、全体をシングルクォートで囲む
+					return `'${value.toString().replace(/'/g, "''")}'`;
+				}
+
+				const body = batch.map((row) => `(${row.map(escapeSQLite).join(", ")})`).join(", ");
+
+				const query = `INSERT OR REPLACE INTO ${table} (${keys?.join(", ")}) VALUES ${body}`;
 
 				// 最初のバッチ以外は待機時間を入れる
 				if (processedRecords > 0) {
